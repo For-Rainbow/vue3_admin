@@ -66,6 +66,7 @@ export default {
           if (meta.status !== 200) return message.error(meta.msg)
           message.success(meta.msg)
           window.sessionStorage.token = data.token
+          window.sessionStorage.username = data.username
           proxy.$router.push('/home')
         })
         .catch(() => false);
