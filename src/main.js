@@ -19,7 +19,11 @@ import {
   ConfigProvider,
   Drawer,
   Row,
-  Col
+  Col,
+  Tag,
+  Modal,
+  Tree,
+  Tooltip
 } from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css';
 import axios from 'axios';
@@ -53,4 +57,8 @@ app.use(store)
   .use(Drawer)
   .use(Row)
   .use(Col)
+  .use(Tag)
+  .use(Modal)
+  .use(Tree)
+  .use(Tooltip)
   .mount('#app')

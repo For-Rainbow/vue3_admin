@@ -8,23 +8,51 @@
         <a-switch @click="stateChangeHandler(record.id, !text)" :checked="text"></a-switch>
       </template>
       <template #handler="{ record }">
-        <a-button @click="showDrawer(record.id)" type="primary" shape="circle">
-          <template #icon>
-            <EditOutlined />
+        <a-tooltip placement="top">
+          <template #title>
+            <span>编辑用户</span>
           </template>
-        </a-button>
-        <a-button @click="removeUserHandler(record.id)" type="danger" shape="circle">
-          <template #icon>
-            <CloseOutlined />
+          <a-button @click="showDrawer(record.id)" type="primary" shape="circle">
+            <template #icon>
+              <EditOutlined />
+            </template>
+          </a-button>
+        </a-tooltip>
+        <a-tooltip placement="top">
+          <template #title>
+            <span>删除用户</span>
           </template>
-        </a-button>
-        <a-button type="primary" shape="circle">
-          <template #icon>
-            <ToolOutlined />
+          <a-button @click="removeUserHandler(record.id)" type="danger" shape="circle">
+            <template #icon>
+              <CloseOutlined />
+            </template>
+          </a-button>
+        </a-tooltip>
+        <a-tooltip placement="top">
+          <template #title>
+            <span>分配角色</span>
           </template>
-        </a-button>
+          <a-button type="primary" @click="showRoleBox(record.id, record.username, record.role_name)" shape="circle">
+            <template #icon>
+              <ToolOutlined />
+            </template>
+          </a-button>
+        </a-tooltip>
       </template>
     </a-table>
+    <a-modal v-model:visible="roleBoxVisible" title="分配角色" @ok="setRoleHandle">
+      <p>当前用户：{{ currentUserInfo.username }}</p>
+      <p>当前角色：{{ currentUserInfo.role_name }}</p>
+      <p>
+        选择角色：
+        <a-select ref="select" v-model:value="selectedValue" style="width: 120px">
+          <a-select-option :key="item.id" v-for="item in rolesList" :value="item.id">{{ item.roleName }}
+          </a-select-option>
+        </a-select>
+      </p>
+    </a-modal>
+
+
     <a-config-provider :locale="locale">
       <a-pagination :pageSizeOptions="['1', '2', '5', '8', '10']" :defaultPageSize="5" @change="pageChangeHandler"
         @showSizeChange="showSizeChangeHandler" style="margin-top: 30px;" :total="total" show-size-changer
@@ -271,9 +299,31 @@ export default {
       message.success(meta.msg)
       queryData()
     }
-
-
-
+    const selectedValue = ref('请选择')
+    const roleBoxVisible = ref(false)
+    const currentUserInfo = reactive({})
+    const rolesList = ref([])
+    const showRoleBox = async (id, username, role_name) => {
+      currentUserInfo.username = username
+      currentUserInfo.id = id
+      currentUserInfo.role_name = role_name
+      const { meta, data } = await proxy.$http.get('roles')
+      if (meta.status === 200) {
+        rolesList.value = true
+      }
+      roleBoxVisible.value = true
+    }
+    const setRoleHandle = async () => {
+      if (selectedValue.value === '请选择') return message.error('请选择角色')
+      const { meta } = await proxy.$http.put(`users/${currentUserInfo.id}/role`, {
+        rid: selectedValue.value
+      })
+      if (meta.status !== 200) return message.error(meta.msg)
+      message.success(meta.msg)
+      queryData()
+      roleBoxVisible.value = false
+      selectedValue.value = '请选择'
+    }
     return {
       columns,
       onSearch,
@@ -291,7 +341,12 @@ export default {
       stateChangeHandler,
       removeUserHandler,
       isEditUser,
-      formRef
+      formRef,
+      roleBoxVisible,
+      showRoleBox,
+      currentUserInfo,
+      selectedValue,
+      rolesList
     }
   }
 }
